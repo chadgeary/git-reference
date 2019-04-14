@@ -1,0 +1,21 @@
+#!/bin/sh
+# create's a public (default) personal project @ github.com
+
+GITUSERNAME=$(awk '/name/{ print $3 }' ~/.gitconfig)
+if [ -z $GITUSERNAME ];
+then
+	echo "user name not found in ~/.gitconfig, exiting."
+	exit
+fi
+
+echo "git project name:"
+read GITPROJECTNAME
+if [ -z $GITPROJECTNAME ];
+then
+	echo "git project name was not supplied, exiting."
+	exit
+fi
+
+# create project
+curl --silent -u "$GITUSERNAME" https://api.github.com/user/repos \
+	-d '{"name":"'"$GITPROJECTNAME"'"}' | awk -F'"' '/git_url/{ print $4 }' 
