@@ -1,0 +1,28 @@
+#!/bin/bash
+# github add ssh key via api with password
+PUBKEYFILE="$HOME/.ssh/id_rsa.pub"
+PUBKEY=$(cat $PUBKEYFILE | tr -d '\n')
+TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
+JSONDATA=$(mktemp)
+
+# username
+while [[ -z $GITHUBUSER ]]
+do
+	read -p 'github username: ' GITHUBUSER
+done
+
+# if key does not exist, exit
+if [[ -z $PUBKEY ]]
+then
+	echo "no key found"
+	exit 1
+fi
+
+# generate JSONKEY file
+printf '{"title":"'"sshkey-$TIMESTAMP"'", "key":"'"$PUBKEY"'"}' > $JSONDATA
+
+# auth and post key
+curl -u "$GITHUBUSER" -H "Content-Type: application/json" -d @$JSONDATA  https://api.github.com/user/keys
+
+# remove JSONKEY file
+rm -f $JSONDATA
