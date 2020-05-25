@@ -1,7 +1,8 @@
-# A reference for git with simple shell aliases
+# Reference
+A simple bash wrapper for two github.com actions.
 
-# git-config
-Sets ~/.gitconfig user name and email address.
+# git-addkey
+Adds (and generates if needed) SSH public key to github.com profile
 
 # git-createproject
-Create's a new public/personal github.com project repository.
+Creates new public/personal github.com project repository.

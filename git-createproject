@@ -1,21 +1,54 @@
-#!/bin/sh
+#!/bin/bash
 # create's a public (default) personal project @ github.com
 
-GITUSERNAME=$(awk '/name/{ print $3 }' ~/.gitconfig)
-if [ -z $GITUSERNAME ];
+# github name in config
+grep --quiet 'name = ' ~/.gitconfig
+if [ $? != 0 ]
 then
-	echo "user name not found in ~/.gitconfig, exiting."
-	exit
+  echo -n "github (user)name: "
+  read $GH_NAME
+  git config --global user.name "$GH_USERNAME"
 fi
 
-echo "git project name:"
-read GITPROJECTNAME
-if [ -z $GITPROJECTNAME ];
+# github email in config
+grep --quiet 'email = ' ~/.gitconfig
+if [ $? != 0 ]
 then
-	echo "git project name was not supplied, exiting."
-	exit
+  echo -n "github (user)email: "
+  read $GH_EMAIL
+  git config --global user.email "$GH_EMAIL"
+fi
+
+# github token if not present
+grep --quiet 'token = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  "Create a personal access token @ https://github.com/settings/tokens"
+  echo -n "github (user)token: "
+  read $GH_TOKEN
+  git config --global user.token "$GH_TOKEN"
+fi
+
+GH_NAME=$(awk '/name = / { print $3}' ~/.gitconfig)
+GH_TOKEN=$(awk '/token = / { print $3 }' ~/.gitconfig)
+
+echo -n "git project name: "
+read GH_PROJECTNAME
+if [ -z $GH_PROJECTNAME ];
+then
+  echo "git project name was not supplied, exiting."
+  exit
 fi
 
 # create project
-curl --silent -u "$GITUSERNAME" https://api.github.com/user/repos \
-	-d '{"name":"'"$GITPROJECTNAME"'"}' | awk -F'"' '/git_url/{ print $4 }' 
+GH_PROJECT=$(curl --silent -u "$GH_USERNAME:$GH_TOKEN" https://api.github.com/user/repos -d '{"name":"'"$GH_PROJECTNAME"'"}')
+
+echo "$GH_PROJECT" | grep --quiet '"ssh_url"'
+if [ $? != 0 ]
+then
+  echo "$GH_PROJECT"
+else
+  echo "Success, to add via CLI to a git project folder run the following command:"
+  GH_URL=$(echo "$GH_PROJECT" | awk -F'"' '/ssh_url/{ print $4 }')
+  echo "git remote add origin $GH_URL"
+fi

@@ -1,28 +1,64 @@
 #!/bin/bash
-# github add ssh key via api with password
 PUBKEYFILE="$HOME/.ssh/id_rsa.pub"
-PUBKEY=$(cat $PUBKEYFILE | tr -d '\n')
+PRIKEYFILE="$HOME/.ssh/id_rsa"
+
+# ssh key creation if none exists
+if [ -z $PUBKEYFILE ]
+then
+  # if no private key
+  if [ -z $PRIKEYFILE ]
+  then
+    # create private + public pair
+    yes "" | ssh-keygen -N "" >&- 2>&-
+  else
+    # else create public from private
+    ssh-keygen -y -f $PRIKEYFILE > $PUBKEYFILE
+  fi
+fi
+
+# github name in config
+grep --quiet 'name = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  echo "github (user)name:"
+  read $GH_NAME
+  git config --global user.name "$GH_USERNAME"
+fi
+
+# github email in config
+grep --quiet 'email = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  echo "github (user)email:"
+  read $GH_EMAIL
+  git config --global user.email "$GH_EMAIL"
+fi
+
+# github token if not present
+grep --quiet 'token = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  "Create a personal access token @ https://github.com/settings/tokens"
+  echo "github (user)token:"
+  read $GH_TOKEN
+  git config --global user.token "$GH_TOKEN"
+fi
+
+GH_NAME=$(awk '/name = / { print $3}' ~/.gitconfig)
+GH_TOKEN=$(awk '/token = / { print $3 }' ~/.gitconfig)
+
+# github add ssh key via api with password
+PUBKEYDATA=$(cat $PUBKEYFILE | tr -d '\n')
 TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
 JSONDATA=$(mktemp)
 
-# username
-while [[ -z $GITHUBUSER ]]
-do
-	read -p 'github username: ' GITHUBUSER
-done
-
-# if key does not exist, exit
-if [[ -z $PUBKEY ]]
-then
-	echo "no key found"
-	exit 1
-fi
-
 # generate JSONKEY file
-printf '{"title":"'"sshkey-$TIMESTAMP"'", "key":"'"$PUBKEY"'"}' > $JSONDATA
+echo "Creating temporary json keyfile $JSONDATA..."
+printf '{"title":"'"sshkey-$TIMESTAMP"'", "key":"'"$PUBKEYDATA"'"}' > $JSONDATA
 
 # auth and post key
-curl -u "$GITHUBUSER" -H "Content-Type: application/json" -d @$JSONDATA  https://api.github.com/user/keys
+curl -u "$GH_USER:$GH_TOKEN" -H "Content-Type: application/json" -d @$JSONDATA  https://api.github.com/user/keys
 
 # remove JSONKEY file
+echo "Removing temporary json keyfile $JSONDATA..."
 rm -f $JSONDATA
