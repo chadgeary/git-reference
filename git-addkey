@@ -42,6 +42,7 @@ then
   echo "github (user)token:"
   read GH_TOKEN
   git config --global user.token "$GH_TOKEN"
+  chmod go-rw ~/.gitconfig
 fi
 
 GH_NAME=$(awk '/name = / { print $3}' ~/.gitconfig)
