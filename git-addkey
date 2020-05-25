@@ -21,7 +21,7 @@ grep --quiet 'name = ' ~/.gitconfig
 if [ $? != 0 ]
 then
   echo "github (user)name:"
-  read $GH_NAME
+  read GH_NAME
   git config --global user.name "$GH_USERNAME"
 fi
 
@@ -30,7 +30,7 @@ grep --quiet 'email = ' ~/.gitconfig
 if [ $? != 0 ]
 then
   echo "github (user)email:"
-  read $GH_EMAIL
+  read GH_EMAIL
   git config --global user.email "$GH_EMAIL"
 fi
 
@@ -40,7 +40,7 @@ if [ $? != 0 ]
 then
   "Create a personal access token @ https://github.com/settings/tokens"
   echo "github (user)token:"
-  read $GH_TOKEN
+  read GH_TOKEN
   git config --global user.token "$GH_TOKEN"
 fi
 
