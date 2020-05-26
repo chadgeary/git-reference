@@ -38,7 +38,7 @@ fi
 grep --quiet 'token = ' ~/.gitconfig
 if [ $? != 0 ]
 then
-  "Create a personal access token @ https://github.com/settings/tokens"
+  echo "Create a personal access token @ https://github.com/settings/tokens"
   echo "github (user)token:"
   read GH_TOKEN
   git config --global user.token "$GH_TOKEN"
