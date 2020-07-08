@@ -3,14 +3,16 @@ PUBKEYFILE="$HOME/.ssh/id_rsa.pub"
 PRIKEYFILE="$HOME/.ssh/id_rsa"
 
 # ssh key creation if none exists
-if [ -z $PUBKEYFILE ]
+if [ ! -f $PUBKEYFILE ]
 then
   # if no private key
-  if [ -z $PRIKEYFILE ]
+  if [ ! -f $PRIKEYFILE ]
   then
+    echo "Creating key pair..."
     # create private + public pair
     yes "" | ssh-keygen -N "" >&- 2>&-
   else
+    echo "Creating pubkey from privkey..."
     # else create public from private
     ssh-keygen -y -f $PRIKEYFILE > $PUBKEYFILE
   fi
