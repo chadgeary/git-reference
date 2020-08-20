@@ -1,5 +1,5 @@
 # Reference
-A simple bash wrapper for two github.com actions.
+A simple bash wrapper for miscellaneous github.com actions. Take note of the github token requirements.
 
 # git-addkey
 Adds (and generates if needed) SSH public key to github.com profile
