@@ -1,0 +1,98 @@
+#!/bin/bash
+# create's a public (default) personal project @ github.com
+
+# github name in config
+grep --quiet 'name = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  echo -n "github (user)name: "
+  read GH_NAME
+  git config --global user.name "$GH_USERNAME"
+fi
+
+# github email in config
+grep --quiet 'email = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  echo -n "github (user)email: "
+  read GH_EMAIL
+  git config --global user.email "$GH_EMAIL"
+fi
+
+# github token if not present
+grep --quiet 'token = ' ~/.gitconfig
+if [ $? != 0 ]
+then
+  "Create a personal access token @ https://github.com/settings/tokens"
+  echo -n "github (user)token: "
+  read GH_TOKEN
+  git config --global user.token "$GH_TOKEN"
+  chmod go-rw ~/.gitconfig
+fi
+
+GH_NAME=$(awk '/name = / { print $3}' ~/.gitconfig)
+GH_TOKEN=$(awk '/token = / { print $3 }' ~/.gitconfig)
+
+echo -n "git project owner: "
+read GH_PROJECTOWNER
+if [ -z $GH_PROJECTOWNER ];
+then
+  echo "git project owner was not supplied, exiting."
+  exit
+fi
+
+echo -n "git project name: "
+read GH_PROJECTNAME
+if [ -z $GH_PROJECTNAME ];
+then
+  echo "git project name was not supplied, exiting."
+  exit
+fi
+
+echo -n "source branch owner: "
+read GH_SOURCEBRANCHOWNER
+if [ -z $GH_SOURCEBRANCHOWNER ];
+then
+  echo "source branch owner was not supplied, exiting."
+  exit
+fi
+
+echo -n "source branch name: "
+read GH_SOURCEBRANCHNAME
+if [ -z $GH_SOURCEBRANCHNAME ];
+then
+  echo "source branch name was not supplied, exiting."
+  exit
+fi
+
+echo -n "destination branch name: "
+read GH_DESTBRANCHNAME
+if [ -z $GH_DESTBRANCHNAME ];
+then
+  echo "destination branch name was not supplied, exiting."
+  exit
+fi
+
+echo -n "pull request title: "
+read GH_PRTITLE
+if [ -z "$GH_PRTITLE" ];
+then
+  echo "pull request title was not supplied, exiting."
+  exit
+fi
+
+echo -n "pull request description: "
+read GH_PRDESCRIPTION
+
+# create pull request
+GH_OUTPUT=$(curl --silent -u "$GH_USERNAME:$GH_TOKEN" https://api.github.com/repos/$GH_PROJECTOWNER/$GH_PROJECTNAME/pulls -d '{"title":"'"$GH_PRTITLE"'","body":"'"$GH_PRDESCRIPTION"'","head":"'"$GH_SOURCEBRANCHOWNER:$GH_SOURCEBRANCHNAME"'","base":"'"$GH_DESTBRANCHNAME"'"}')
+
+echo "$GH_GHOUTPUT" | grep --quiet '"url":.*pulls.*'
+if [ $? == 0 ]
+then
+  echo "Pull created."
+  PULL_URL=$(echo "$GH_OUTPUT" | grep '"url":.*pulls.*' | awk -F'"' '{ print $4 }')
+  echo $PULL_URL
+else
+  echo "$GH_OUTPUT"
+fi
